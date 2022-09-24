@@ -1,53 +1,87 @@
 import styled from "styled-components";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { auth, provider } from "../firebase.js";
 import { signInWithPopup } from "firebase/auth";
+import {
+  selectUserName,
+  selectUserEmail,
+  selectUserPhoto,
+  setUserLoginDetails,
+} from "../features/user/userSlices.js";
+
 function Header() {
+  console.log(selectUserName);
   const handleAuth = () => {
     signInWithPopup(auth, provider)
       .then((result) => {
-        console.log(result);
+        console.log(result.user);
+        setUser(result.user);
       })
       .catch((error) => {
+        console.log(error);
         alert(error.message);
       });
   };
-
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const userName = useSelector(selectUserName);
+  const userEmail = useSelector(selectUserEmail);
+  const userPhoto = useSelector(selectUserPhoto);
+  console.log("userPhoto", userPhoto);
+  const setUser = (user) => {
+    console.log("displayName", user.displayName);
+    dispatch(
+      setUserLoginDetails({
+        name: user.displayName,
+        email: user.email,
+        photo: user.photoURL,
+      })
+    );
+  };
   return (
     <Nav>
       <Logo>
         <img src="/images/logo.svg" />
       </Logo>
-      <NavMenu>
-        <a href="/home" alt="home">
-          <img src="/images/home-icon.svg" alt="home" />
-          <span>HOME</span>
-        </a>
-        <a>
-          <img src="/images/search-icon.svg" alt="SEARCH" />
-          <span>SEARCH</span>
-        </a>
-        <a>
-          <img
-            src="/images/wishlist.svg"
-            alt="WATCHLIST"
-            style={{ height: "40px" }}
-          />
-          <span>WATCHLIST</span>
-        </a>
-        <a>
-          <img src="/images/original-icon.svg" alt="ORIGINALS" />
-          <span>ORIGINALS</span>
-        </a>
-        <a>
-          <img src="/images/movie-icon.svg" alt="MOVIES" />
-          <span>MOVIES</span>
-        </a>
-        <a>
-          <img src="/images/series-icon.svg" alt="SERIES" />
-          <span>SERIES</span>
-        </a>
-      </NavMenu>
-      <Login onClick={handleAuth}>Login</Login>
+      {!userName ? (
+        <Login onClick={handleAuth}>Login</Login>
+      ) : (
+        <>
+          {console.log("userName", userName)}
+          <NavMenu>
+            <a href="/home" alt="home">
+              <img src="/images/home-icon.svg" alt="home" />
+              <span>HOME</span>
+            </a>
+            <a>
+              <img src="/images/search-icon.svg" alt="SEARCH" />
+              <span>SEARCH</span>
+            </a>
+            <a>
+              <img
+                src="/images/wishlist.svg"
+                alt="WATCHLIST"
+                style={{ height: "40px" }}
+              />
+              <span>WATCHLIST</span>
+            </a>
+            <a>
+              <img src="/images/original-icon.svg" alt="ORIGINALS" />
+              <span>ORIGINALS</span>
+            </a>
+            <a>
+              <img src="/images/movie-icon.svg" alt="MOVIES" />
+              <span>MOVIES</span>
+            </a>
+            <a>
+              <img src="/images/series-icon.svg" alt="SERIES" />
+              <span>SERIES</span>
+            </a>
+          </NavMenu>
+          <UserImg src={userPhoto} alt={userName} />
+        </>
+      )}
     </Nav>
   );
 }
@@ -107,7 +141,7 @@ const NavMenu = styled.div`
         white-space: nowrap;
         position: relative;
 
-    
+
     &:before{
         background-color: rgb(249,249,249);
         border-radius: 0px 0px 4px 4px;
@@ -151,5 +185,8 @@ const Login = styled.a`
     color: #000;
     border-color: transparent;
   }
+`;
+const UserImg = styled.img`
+  height: 100%;
 `;
 export default Header;
