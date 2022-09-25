@@ -1,33 +1,31 @@
 import styled from "styled-components";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { auth, provider } from "../firebase.js";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signOut } from "firebase/auth";
 import {
   selectUserName,
   selectUserEmail,
   selectUserPhoto,
   setUserLoginDetails,
+  setSignOutState,
 } from "../features/user/userSlices.js";
 
 function Header() {
-  console.log(selectUserName);
-  const handleAuth = () => {
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        console.log(result.user);
-        setUser(result.user);
-      })
-      .catch((error) => {
-        console.log(error);
-        alert(error.message);
-      });
-  };
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const userName = useSelector(selectUserName);
   const userEmail = useSelector(selectUserEmail);
   const userPhoto = useSelector(selectUserPhoto);
+  useEffect(() => {
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        setUser(user);
+        navigate("./home");
+      }
+    });
+  }, [userName]);
   console.log("userPhoto", userPhoto);
   const setUser = (user) => {
     console.log("displayName", user.displayName);
@@ -38,6 +36,28 @@ function Header() {
         photo: user.photoURL,
       })
     );
+  };
+  const handleAuth = () => {
+    if (!userName) {
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          console.log(result.user);
+          setUser(result.user);
+        })
+        .catch((error) => {
+          console.log(error);
+          alert(error.message);
+        });
+    } else {
+      signOut(auth, provider)
+        .then(() => {
+          dispatch(setSignOutState());
+          navigate("/");
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
   };
   return (
     <Nav>
@@ -79,7 +99,12 @@ function Header() {
               <span>SERIES</span>
             </a>
           </NavMenu>
-          <UserImg src={userPhoto} alt={userName} />
+          <SignOut>
+            <UserImg src={userPhoto} alt={userName} />
+            <DropDown>
+              <span onClick={handleAuth}>Sign Out</span>
+            </DropDown>
+          </SignOut>
         </>
       )}
     </Nav>
@@ -101,7 +126,7 @@ const Nav = styled.nav`
 `;
 const Logo = styled.a`
     padding: 0;
-    width: 80px;
+     width: 80px;
     margin-top: 4px;
     max-height: 70px;
     font-size: 0;
@@ -188,5 +213,41 @@ const Login = styled.a`
 `;
 const UserImg = styled.img`
   height: 100%;
+`;
+const DropDown = styled.div`
+  position: absolute;
+  top: 48px;
+  right: 0px;
+  background-color: rgb(19, 19, 19);
+  border: 1px solid rgba(151, 151, 151, 0.34);
+  border-radius: 4px;
+  box-shadow: rgb(0 0 0 / 50%) 0px 0px 18px 0px;
+  padding: 10px;
+  font-size: 14px;
+  letter-spacing: 3px;
+  width: 110px;
+  opacity: 0;
+`;
+const SignOut = styled.div`
+  position: relative;
+  height: 48px;
+  widht: 48px;
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+
+  img[alt] {
+    letter-spacing: 2px;
+  }
+  ${UserImg} {
+    border-radius: 50%;
+  }
+  &:hover {
+    ${DropDown} {
+      opacity: 0.8;
+      transition: 1s ease-in-out;
+    }
+  }
 `;
 export default Header;
