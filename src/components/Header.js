@@ -59,6 +59,7 @@ function Header() {
         });
     }
   };
+
   return (
     <Nav>
       <Logo>
@@ -101,6 +102,7 @@ function Header() {
           </NavMenu>
           <SignOut>
             <UserImg src={userPhoto} alt={userName} />
+
             <DropDown>
               <span onClick={handleAuth}>Sign Out</span>
             </DropDown>
